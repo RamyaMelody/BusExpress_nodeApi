@@ -5,21 +5,21 @@ var cors = require('cors')
 const app = express();
 const MongoClient = require('mongodb');
 const url = 'mongodb://localhost:27017';
+// const url = 'mongodb+srv://ramyabtech19:jaisriram@ecomdb-t8ic5.mongodb.net/test?retryWrites=true&w=majority';
 const saltRounds = 10;
 
 app.use(cors());
 
-app.use(bodyparser.json()) //middle ware 
+app.use(bodyparser.json())
 
 
-
+/* Bus Operator view the bus*/
 app.get('/view', function (req, res) {
-    //res.json(myData)
     MongoClient.connect(url, (err, client) => {
         if (err) return console.log(err);
         var db = client.db("busDB");
-        var usersData = db.collection('model').find().toArray();
-        usersData
+        var busData = db.collection('bus').find().toArray();
+        busData
             .then(function (data) {
                 client.close();
                 res.json(data);
@@ -33,14 +33,15 @@ app.get('/view', function (req, res) {
 
     })
 });
+/* Bus Operator add the bus*/
 app.post('/bus', function (req, res) {
-    console.log(req.body);
+    //console.log(req.body);
 
     MongoClient.connect(url, (err, client) => {
         if (err) return console.log(err);
 
         var db = client.db("busDB");
-        db.collection('model').insertOne(req.body, (err, result) => {
+        db.collection('bus').insertOne(req.body, (err, result) => {
             if (err) throw err;
             client.close();
 
@@ -52,16 +53,16 @@ app.post('/bus', function (req, res) {
     })
 
 })
-
+/* Bus Operator update the particular bus*/
 app.put('/update/:id', function (req, res) {
-    console.log(req.params.id);
+    //console.log(req.params.id);
     let param_id = req.params.id
-    console.log(req.body);
+    //console.log(req.body);
     MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
         if (err) throw err;
         var db = client.db('busDB');
         var ObjectId = require('mongodb').ObjectID;
-        db.collection('model').updateOne(
+        db.collection('bus').updateOne(
             { _id: new ObjectId(param_id) },
             { $set: { model: req.body.model, busNum: req.body.busNum, seats: req.body.seats, date: req.body.date, source: req.body.source, destination: req.body.destination, departureTime: req.body.departureTime, arrivalTime: req.body.arrivalTime } }, { upsert: true }, (err, result) => {
                 if (err) throw err;
@@ -73,17 +74,17 @@ app.put('/update/:id', function (req, res) {
 
     });
 });
-
+/* Bus Operator delete the particular bus*/
 app.delete('/delete/:id', function (req, res) {
-    console.log(req.params.id);
+    //console.log(req.params.id);
     let param_id = req.params.id
-    console.log(req.body);
+    //console.log(req.body);
     MongoClient.connect(url, (err, client) => {
         if (err) return console.log(err);
 
         var db = client.db("busDB");
         var ObjectId = require('mongodb').ObjectID;
-        db.collection('model').findOneAndDelete({ _id: new ObjectId(param_id) }, (err, result) => {
+        db.collection('bus').findOneAndDelete({ _id: new ObjectId(param_id) }, (err, result) => {
             if (err) throw err;
             client.close();
 
@@ -93,15 +94,15 @@ app.delete('/delete/:id', function (req, res) {
         })
     })
 })
-
+/* users search to find the bus*/
 app.get('/searchbus/:src/:dest/:date', function (req, res) {
-    console.log(req.params.src);
-    console.log(req.params.dest);
-    console.log(req.params.date);
+    // console.log(req.params.src);
+    // console.log(req.params.dest);
+    // console.log(req.params.date);
     MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
         if (err) throw err;
         var db = client.db("busDB");
-        var busData = db.collection("model").find({ source: req.params.src, destination: req.params.dest, date: req.params.date }).toArray();
+        var busData = db.collection("bus").find({ source: req.params.src, destination: req.params.dest, date: req.params.date }).toArray();
         busData.then(function (data) {
             client.close();
             res.json(data);
@@ -115,36 +116,41 @@ app.get('/searchbus/:src/:dest/:date', function (req, res) {
     });
 });
 
-// Update Seats Info
-app.put('/editSeats/:busNum', function (req, res) {
-    console.log(req.params.busNum);
-    console.log(req.body);
-    var blockedSeats=req.body;
-    var updateSeats={
-        seat1: blockedSeats.includes('seat1') ? true:false,
-        seat2: blockedSeats.includes('seat2') ? true:false, 
-        seat3: blockedSeats.includes('seat3') ? true:false, 
-        seat4: blockedSeats.includes('seat4') ? true:false, 
-        seat5: blockedSeats.includes('seat5') ? true:false, 
-        seat6: blockedSeats.includes('seat6') ? true:false, 
-        seat7: blockedSeats.includes('seat7') ? true:false, 
-        seat8: blockedSeats.includes('seat8') ? true:false, 
-        seat9: blockedSeats.includes('seat9') ? true:false, 
-        seat10: blockedSeats.includes('seat10') ? true:false, 
-        seat11: blockedSeats.includes('seat11') ? true:false, 
-        seat12: blockedSeats.includes('seat12') ? true:false,
-        seat13: blockedSeats.includes('seat13') ? true:false,
-        seat14: blockedSeats.includes('seat14') ? true:false,
-        seat15: blockedSeats.includes('seat15') ? true:false,
-        seat16: blockedSeats.includes('seat16') ? true:false
+/* Update Seats Info*/
+app.put('/editSeats/:busNum/:avail_seats', function (req, res) {
+    //console.log(req.params.busNum);
+    //console.log(req.params.avail_seats);
+    var blockedSeats = req.body;
+    if (blockedSeats.length == 16) {
+        var bal_seats = 0
     }
-    console.log(updateSeats)
+    else {
+        var bal_seats = 16 - blockedSeats.length;
+    }
+    var updateSeats = {
+        s1: blockedSeats.includes('s1') ? true : false,
+        s2: blockedSeats.includes('s2') ? true : false,
+        s3: blockedSeats.includes('s3') ? true : false,
+        s4: blockedSeats.includes('s4') ? true : false,
+        s5: blockedSeats.includes('s5') ? true : false,
+        s6: blockedSeats.includes('s6') ? true : false,
+        s7: blockedSeats.includes('s7') ? true : false,
+        s8: blockedSeats.includes('s8') ? true : false,
+        s9: blockedSeats.includes('s9') ? true : false,
+        s10: blockedSeats.includes('s10') ? true : false,
+        s11: blockedSeats.includes('s11') ? true : false,
+        s12: blockedSeats.includes('s12') ? true : false,
+        s13: blockedSeats.includes('s13') ? true : false,
+        s14: blockedSeats.includes('s14') ? true : false,
+        s15: blockedSeats.includes('s15') ? true : false,
+        s16: blockedSeats.includes('s16') ? true : false
+    }
+    // console.log(updateSeats)
     MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
         if (err) throw err;
         var db = client.db("busDB");
-        //var ObjectId = require('mongodb').ObjectID;
-        db.collection("model").updateOne({ busNum: req.params.busNum },
-            { $set: { seatstatus: updateSeats } }, function (err, result) {
+        db.collection("bus").updateOne({ busNum: req.params.busNum },
+            { $set: { seatstatus: updateSeats, seats: bal_seats } }, function (err, result) {
                 if (err) throw err;
                 client.close();
                 res.json({
@@ -154,16 +160,16 @@ app.put('/editSeats/:busNum', function (req, res) {
 
     });
 });
-// get blocked seats 
+
+/* get blocked seats */
 app.get('/seatstatus/:busnum', function (req, res) {
-    console.log(req.params.busnum)
-    
+    //console.log(req.params.busnum)
     MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
         if (err) throw err;
         var db = client.db("busDB");
-        var busData = db.collection("model").findOne({busNum: req.params.busnum});
+        var busData = db.collection("bus").findOne({ busNum: req.params.busnum });
         busData.then(function (data) {
-            console.log(data);            
+            //console.log(data);
             client.close();
             res.json(data);
         })
@@ -175,10 +181,143 @@ app.get('/seatstatus/:busnum', function (req, res) {
             });
     });
 });
-
-//REGISTER FORM API
-app.post('/register', function (req, res) {
+/* Add ticket  */
+app.post('/addticket', function (req, res) {
     console.log(req.body);
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("busDB");
+        db.collection("tickets").insertOne((req.body), function (err, result) {
+            if (err) throw err;
+            client.close();
+            res.send({
+                result: result,
+                message: 'Bus Data Added'
+            });
+        });
+    });
+
+});
+/* Get Tickets */
+app.get('/getTicket/:userEmail', function (req, res) {
+    //console.log(req.params.userEmail);
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("busDB");
+        var busData = db.collection("tickets").find({ userEmail: req.params.userEmail}).toArray();
+        busData.then(function (data) {
+            client.close();
+            res.json(data);
+        })
+            .catch(function (err) {
+                client.close();
+                res.json({
+                    message: "error"
+                })
+            });
+    });
+});
+/* Cancel the Tickets */
+app.put('/cancelTicket/:tickId', function (req, res) {
+    console.log(req.params.tickId)
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("busDB");
+        db.collection("tickets").updateOne({ ticketId: req.params.tickId },
+            { $set: { status: "Cancelled"} }, function (err, result) {
+                if (err) throw err;
+                client.close();
+                res.json({
+                    message: "Cancelled Successfully"                    
+                })
+            });
+
+    });
+});
+/* Get Cancelled Tickets */
+app.get('/getCancelTicket', function (req, res) {
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("busDB");
+        var busData = db.collection("tickets").find({ status: "Cancelled"}).toArray();
+        busData.then(function (data) {
+            client.close();
+            res.json(data);
+        })
+            .catch(function (err) {
+                client.close();
+                res.json({
+                    message: "error"
+                })
+            });
+    });
+});
+/* Enable the seats for book from cancel tickets */
+app.put('/freeseats/:busNum/:freeseats', function (req, res) {
+    console.log(req.params.busNum);
+    console.log(req.params.freeseats);
+    var freeSeats=req.params.freeseats.split(',')
+    console.log(req.body);
+    var blockedSeats=req.body;
+    var bal_seats;  
+
+    freeSeats.forEach((item)=>{
+        if (blockedSeats.includes(item))
+        {
+            var index=blockedSeats.indexOf(item);
+            blockedSeats.splice(index,1)
+        }
+    })
+    console.log(blockedSeats);
+
+    if (blockedSeats.length == 12) {
+        bal_seats = 0
+    }
+    else {
+        bal_seats = 12 - blockedSeats.length
+    }    
+    
+    var updateSeats = {
+        s1: blockedSeats.includes('s1') ? true : false,
+        s2: blockedSeats.includes('s2') ? true : false,
+        s3: blockedSeats.includes('s3') ? true : false,
+        s4: blockedSeats.includes('s4') ? true : false,
+        s5: blockedSeats.includes('s5') ? true : false,
+        s6: blockedSeats.includes('s6') ? true : false,
+        s7: blockedSeats.includes('s7') ? true : false,
+        s8: blockedSeats.includes('s8') ? true : false,
+        s9: blockedSeats.includes('s9') ? true : false,
+        s10: blockedSeats.includes('s10') ? true : false,
+        s11: blockedSeats.includes('s11') ? true : false,
+        s12: blockedSeats.includes('s12') ? true : false,
+        s13: blockedSeats.includes('s13') ? true : false,
+        s14: blockedSeats.includes('s14') ? true : false,
+        s15: blockedSeats.includes('s15') ? true : false,
+        s16: blockedSeats.includes('s16') ? true : false
+    }    
+
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("busDB");
+        db.collection("bus").updateOne({ busNum: req.params.busNum },
+            { $set: { seatstatus: updateSeats, seats: bal_seats}}, function (err, result) {
+                if (err) throw err;
+                console.log("Seats Enabled");
+
+                client.close();
+                res.json({
+                    result: result,
+                    message: "Seats Enabled"
+                })
+            });
+
+    });
+});
+
+
+/*Register FORM */
+app.post('/register', function (req, res) {
+    //console.log(req.body);
 
     MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
         if (err) throw err;
@@ -190,8 +329,8 @@ app.post('/register', function (req, res) {
             bcrypt.hash(req.body.password, salt, (err, hash) => {
                 if (err) throw err;
 
-                db.collection('users').insertOne({ name: req.body.name, email: req.body.email, password: hash, contact: req.body.contact }, (err, result) => {
-                    if (err) throw err; 
+                db.collection('users').insertOne({ unique_id: genUniqueId(), name: req.body.name, email: req.body.email, password: hash, contact: req.body.contact }, (err, result) => {
+                    if (err) throw err;
                     client.close();
 
                     res.json({
@@ -204,13 +343,17 @@ app.post('/register', function (req, res) {
     })
 
 })
-
+/*Login FORM */
 app.post('/login', function (req, res) {
-    console.log(req.body)
+    //console.log(req.body)
     MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
         if (err) throw err;
         var db = client.db("loginDB");
-        db.collection('users').findOne({ email: req.body.email }, (err, user) => {
+        var loginType =
+        {
+            $or: [{ email: req.body.email }, { contact: req.body.email }, { unique_id: req.body.email }]
+        }
+        db.collection('users').findOne(loginType, (err, user) => {
             if (err) throw err;
             //console.log(user)
             if (!user) {
@@ -222,7 +365,7 @@ app.post('/login', function (req, res) {
                 if (err) throw err;
                 if (result) {
 
-                    res.json({user})
+                    res.json({ user })
                 }
                 else {
                     res.json({
@@ -234,7 +377,39 @@ app.post('/login', function (req, res) {
     })
 });
 
+/* Edit Profile */
+app.put('/editProfile/:id', function (req, res) {
+    console.log(req.params.id)
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("loginDB");
+        db.collection("users").updateOne({ unique_id: req.params.id },
+            { $set: { name: req.body.name, email: req.body.email, contact: req.body.contact} }, function (err, result) {
+                if (err) throw err;
+                client.close();
+                res.json({
+                    message: "Profile Updated"                    
+                })
+            });
 
+    });
+});
+
+/* Port */
 app.listen(3000, function () {
     console.log("port is running")
 });
+
+/* Generate unique id for users*/
+function genUniqueId() {
+    var result = "";
+    var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var charLen = characters.length;
+    for (var i = 0; i < 5; i++) {
+        result += characters.charAt(
+            Math.floor(Math.random() * charLen)
+        );
+    }
+    //console.log(result);
+    return result;
+}
