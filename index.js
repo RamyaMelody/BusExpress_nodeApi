@@ -4,10 +4,10 @@ const bcrypt = require('bcrypt');
 var cors = require('cors')
 const app = express();
 const MongoClient = require('mongodb');
-const url = 'mongodb://localhost:27017';
-// const url = 'mongodb+srv://ramyabtech19:jaisriram@ecomdb-t8ic5.mongodb.net/test?retryWrites=true&w=majority';
+// const url = 'mongodb://localhost:27017';
+const url ='mongodb+srv://ramyabtech19:jaisriram@ecomdb-t8ic5.mongodb.net/test?retryWrites=true&w=majority';
 const saltRounds = 10;
-
+app.set('PORT',process.env.PORT)
 app.use(cors());
 
 app.use(bodyparser.json())
@@ -396,8 +396,8 @@ app.put('/editProfile/:id', function (req, res) {
 });
 
 /* Port */
-app.listen(3000, function () {
-    console.log("port is running")
+app.listen(app.get('PORT'), function () {
+    console.log(app.get('PORT'))
 });
 
 /* Generate unique id for users*/
