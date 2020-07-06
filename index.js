@@ -230,6 +230,7 @@ app.put('/cancelTicket/:tickId', function (req, res) {
                 if (err) throw err;
                 client.close();
                 res.json({
+                    result:result,
                     message: "Cancelled Successfully"
                 })
             });
@@ -271,11 +272,11 @@ app.put('/freeseats/:busNum/:freeseats', function (req, res) {
     })
     console.log(blockedSeats);
 
-    if (blockedSeats.length == 12) {
+    if (blockedSeats.length == 16) {
         bal_seats = 0
     }
     else {
-        bal_seats = 12 - blockedSeats.length
+        bal_seats = 16 - blockedSeats.length
     }
 
     var updateSeats = {
@@ -290,7 +291,11 @@ app.put('/freeseats/:busNum/:freeseats', function (req, res) {
         s9: blockedSeats.includes('s9') ? true : false,
         s10: blockedSeats.includes('s10') ? true : false,
         s11: blockedSeats.includes('s11') ? true : false,
-        s12: blockedSeats.includes('s12') ? true : false
+        s12: blockedSeats.includes('s12') ? true : false,
+        s13: blockedSeats.includes('s13') ? true : false,
+        s14: blockedSeats.includes('s14') ? true : false,
+        s15: blockedSeats.includes('s15') ? true : false,
+        s16: blockedSeats.includes('s16') ? true : false
     }
 
     MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
@@ -483,11 +488,31 @@ app.get('/viewticket/:ticketId', function (req, res) {
             });
     });
 });
-// /* Port */
+
+/* User Booking search */
+app.get('/searchBookingBus/:busNum', function (req, res) {
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+        if (err) throw err;
+        var db = client.db("busDB");
+        var busData = db.collection("tickets").find({ busNum: req.params.busNum, status:"Confirmed" }).toArray();
+        busData.then(function (data) {
+            client.close();
+            res.json(data);
+        })
+            .catch(function (err) {
+                client.close();
+                res.json({
+                    message: "error"
+                })
+            });
+    });
+});
+
+/* Port */
 // app.listen(3000, function () {
 //     console.log("port is running")
 // });
-/* Port */
+
 app.listen(app.get('PORT'), function () {
     console.log(app.get('PORT'))
 });
